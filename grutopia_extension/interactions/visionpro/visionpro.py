@@ -8,7 +8,7 @@ from .TeleVision import OpenTeleVision
 
 class VuerTeleop:
     def __init__(
-        self, cert_file='./GRUtopia/mkcert/cert.pem', key_file='./GRUtopia/mkcert/key.pem', resolution=(720, 1280)
+        self, cert_file='./GRUtopia/mkcert/cert.pem', key_file='./GRUtopia/mkcert/key.pem', resolution=(720, 1280), ngrok=True
     ):
         self.resolution = resolution
         self.crop_size_w = 0
