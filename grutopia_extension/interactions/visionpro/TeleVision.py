@@ -32,14 +32,17 @@ class OpenTeleVision:
         cert_file='./cert.pem',
         key_file='./key.pem',
         stream_mode='image',
+        ngrok=True
     ):
         # self.app=Vuer()
         self.logger = setup_logging()
 
         self.img_shape = (img_shape[0], 2 * img_shape[1], 3)
         self.img_height, self.img_width = img_shape[:2]
-
-        self.app = Vuer(host='0.0.0.0', cert=cert_file, key=key_file, queries=dict(grid=False))
+        if ngrok:
+            self.app = Vuer(host='0.0.0.0', queries=dict(grid=False), queue_len=3)
+        else:
+            self.app = Vuer(host='0.0.0.0', cert=cert_file, key=key_file, queries=dict(grid=False))
         self.app.add_handler('HAND_MOVE')(self.on_hand_move)
         self.app.add_handler('CAMERA_MOVE')(self.on_cam_move)
         if stream_mode == 'image':
