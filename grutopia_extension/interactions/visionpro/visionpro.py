@@ -23,7 +23,7 @@ class VuerTeleop:
         image_queue = Queue()
         toggle_streaming = Event()
         self.tv = OpenTeleVision(
-            self.resolution_cropped, self.shm.name, image_queue, toggle_streaming, cert_file, key_file
+            self.resolution_cropped, self.shm.name, image_queue, toggle_streaming, cert_file, key_file, ngrok
         )
         self.processor = VuerPreprocessor()
 
