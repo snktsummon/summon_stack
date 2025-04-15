@@ -31,8 +31,8 @@ class OpenTeleVision:
         toggle_streaming: SyncEvent,
         cert_file='./cert.pem',
         key_file='./key.pem',
-        stream_mode='image',
-        ngrok=True
+        ngrok=True,
+        stream_mode='image'
     ):
         # self.app=Vuer()
         self.logger = setup_logging()
