@@ -11,6 +11,8 @@ from grutopia.core.robot.robot import BaseRobot
 from grutopia_extension.configs.controllers import GR1TeleOpControllerCfg
 from grutopia_extension.controllers.lcmtypes.teleop import action, joints
 
+from grutopia_extension.controllers import GR1T2TeleOpHandler
+
 
 @BaseController.register('GR1TeleOpController')
 class GR1TeleOpController(BaseController):
@@ -19,11 +21,22 @@ class GR1TeleOpController(BaseController):
     def __init__(self, config: GR1TeleOpControllerCfg, robot: BaseRobot, scene: Scene) -> None:
         super().__init__(config=config, robot=robot, scene=scene)
 
+        urdf_path = '../../assets/robots/gr1/urdf/robot.urdf'
+        retargeting_config_path = '../../assets/robots/gr1/inspire_hand/inspire_hand.yml'
+
+        logging.info(f'args: urdf_path:{ urdf_path}, retargeting_config_path:{retargeting_config_path}')
+        teleop = GR1T2TeleOpHandler(urdf_path, retargeting_config_path)
+        logging.info('waiting for teleop action...')
+        # while True:
+        #     teleop.lc.handle()
+
         self.joint_names = config.joint_names
         self.joint_subset = ArticulationSubset(self.robot.isaac_robot, self.joint_names)
 
-        self.lc = lcm.LCM()
-        self.lc.subscribe('teleop_joints', self.teleop_joints_handler)
+        self.teleop_joints = joints()
+
+        # self.lc = lcm.LCM()
+        # self.lc.subscribe('teleop_joints', self.teleop_joints_handler)
 
     def forward(
         self,
@@ -41,8 +54,12 @@ class GR1TeleOpController(BaseController):
         teleop_action.right_hand_mat = right_hand_mat.tolist()
 
         # Send action and wait for joint positions.
-        self.lc.publish('teleop_action', teleop_action.encode())
-        self.lc.handle()
+        self.teleop_joints = teleop.action_to_control(_,teleop_action)
+        self.last_joint_positions = np.array(self.teleop_joints.joint_positions)
+
+
+        # self.lc.publish('teleop_action', teleop_action.encode())
+        # self.lc.handle()
 
         return self.joint_subset.make_articulation_action(
             joint_positions=self.last_joint_positions, joint_velocities=None

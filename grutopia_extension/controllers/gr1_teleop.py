@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class GR1T2TeleOpHandler:
     def __init__(self, urdf_path: str, retargeting_config_path: str) -> None:
-        self.lc = lcm.LCM()
-        self.lc.subscribe('teleop_action', self.action_to_control)
+        # self.lc = lcm.LCM()
+        # self.lc.subscribe('teleop_action', self.action_to_control)
 
         self.solver = PinIKSolver(urdf_path, False)
         self.head_idx = [13, 18, 21]
@@ -38,7 +38,7 @@ class GR1T2TeleOpHandler:
         self.right_hand_idx = [37, 47, 38, 48, 39, 49, 40, 50, 41, 51, 53]
 
     def action_to_control(self, channel, data):
-        teleop_action = action.decode(data)
+        teleop_action = data.copy()
         target_joint_positions = np.zeros(54)
 
         # Solve IK.
@@ -67,7 +67,8 @@ class GR1T2TeleOpHandler:
         joint_control.joint_num = len(target_joint_positions)
         joint_control.joint_positions = target_joint_positions.tolist()
 
-        self.lc.publish('teleop_joints', joint_control.encode())
+        return joint_control
+        # self.lc.publish('teleop_joints', joint_control.encode())
 
 
 if __name__ == '__main__':
