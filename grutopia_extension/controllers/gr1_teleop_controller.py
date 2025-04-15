@@ -22,8 +22,17 @@ class GR1TeleOpController(BaseController):
         self.joint_names = config.joint_names
         self.joint_subset = ArticulationSubset(self.robot.isaac_robot, self.joint_names)
 
-        self.lc = lcm.LCM()
-        self.lc.subscribe('teleop_joints', self.teleop_joints_handler)
+        # self.lc = lcm.LCM()
+        # self.lc.subscribe('teleop_joints', self.teleop_joints_handler)
+
+        self.context = zmq.Context()
+
+        self.pub = self.context.socket(zmq.PUB)
+        self.pub.bind("tcp://localhost:5555")
+
+        self.sub = self.context.socket(zmq.SUB)
+        self.sub.connect("tcp://localhost:5556")
+        self.sub.setsockopt_string(zmq.SUBSCRIBE, "teleop_joints")
 
     def forward(
         self,
@@ -41,8 +50,12 @@ class GR1TeleOpController(BaseController):
         teleop_action.right_hand_mat = right_hand_mat.tolist()
 
         # Send action and wait for joint positions.
-        self.lc.publish('teleop_action', teleop_action.encode())
-        self.lc.handle()
+        # self.lc.publish('teleop_action', teleop_action.encode())
+        self.pub.send_multipart([b"teleop_action", teleop_action.encode()])
+
+        topic, msg = self.sub.recv_multipart()
+        self.teleop_joints_handler(_,msg)
+        # self.lc.handle()
 
         return self.joint_subset.make_articulation_action(
             joint_positions=self.last_joint_positions, joint_velocities=None

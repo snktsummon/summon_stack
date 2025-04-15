@@ -9,6 +9,7 @@ import yaml
 from dex_retargeting.retargeting_config import RetargetingConfig
 from lcmtypes.teleop import action, joints
 from pin_ik_solver import PinIKSolver
+import zmq
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -18,8 +19,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class GR1T2TeleOpHandler:
     def __init__(self, urdf_path: str, retargeting_config_path: str) -> None:
-        self.lc = lcm.LCM()
-        self.lc.subscribe('teleop_action', self.action_to_control)
+        self.context = zmq.Context()
+        # self.lc = lcm.LCM()
+        # self.lc.subscribe('teleop_action', self.action_to_control)
+
+        self.sub = self.context.socket(zmq.SUB)
+        self.sub.connect("tcp://localhost:5555")
+        self.sub.setsockopt_string(zmq.SUBSCRIBE, "teleop_action")
+
+        self.pub = self.context.socket(zmq.PUB)
+        self.pub.bind("tcp://localhost:5556")
 
         self.solver = PinIKSolver(urdf_path, False)
         self.head_idx = [13, 18, 21]
@@ -67,7 +76,8 @@ class GR1T2TeleOpHandler:
         joint_control.joint_num = len(target_joint_positions)
         joint_control.joint_positions = target_joint_positions.tolist()
 
-        self.lc.publish('teleop_joints', joint_control.encode())
+        # self.lc.publish('teleop_joints', joint_control.encode())
+        self.pub.send_multipart([b"teleop_joints", joint_control.encode()])
 
 
 if __name__ == '__main__':
@@ -83,6 +93,8 @@ if __name__ == '__main__':
         teleop = GR1T2TeleOpHandler(**args.__dict__)
         logging.info('waiting for teleop action...')
         while True:
-            teleop.lc.handle()
+            # teleop.lc.handle()
+            topic, msg = teleop.sub.recv_multipart()
+            teleop.action_to_control(_,msg)
     except KeyboardInterrupt:
         pass
