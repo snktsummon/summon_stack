@@ -11,6 +11,8 @@ from grutopia.core.robot.robot import BaseRobot
 from grutopia_extension.configs.controllers import GR1TeleOpControllerCfg
 from grutopia_extension.controllers.lcmtypes.teleop import action, joints
 
+import zmq
+
 
 @BaseController.register('GR1TeleOpController')
 class GR1TeleOpController(BaseController):
@@ -54,7 +56,7 @@ class GR1TeleOpController(BaseController):
         self.pub.send_multipart([b"teleop_action", teleop_action.encode()])
 
         topic, msg = self.sub.recv_multipart()
-        self.teleop_joints_handler(_,msg)
+        self.teleop_joints_handler("data",msg)
         # self.lc.handle()
 
         return self.joint_subset.make_articulation_action(

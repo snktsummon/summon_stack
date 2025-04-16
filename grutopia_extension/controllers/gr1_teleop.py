@@ -95,6 +95,6 @@ if __name__ == '__main__':
         while True:
             # teleop.lc.handle()
             topic, msg = teleop.sub.recv_multipart()
-            teleop.action_to_control(_,msg)
+            teleop.action_to_control("data",msg)
     except KeyboardInterrupt:
         pass
